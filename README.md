@@ -1,0 +1,2 @@
+This project has the objective of predict the model of a camera based on the content of their photographs using classification techniques. 
+The dataset was obtained from the Kaggle competition: https://www.kaggle.com/c/sp-society-camera-model-identification
