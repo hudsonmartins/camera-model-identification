@@ -44,44 +44,38 @@ def statistical_moments(fingerprint):
 def extract_features_moments(I_noise):	
 	"""
 		Param: Noise image
-		Returns: 81 Features
+		Returns: 63 Features
 	"""
-	R_noise = []
-	G_noise = []
-	B_noise = []
-	for row in I_noise:
-		R_row = []
-		G_row = []
-		B_row = []
-		for pixel in row:
-			R_row.append(pixel[0])
-			G_row.append(pixel[1])
-			B_row.append(pixel[2])
-		R_noise.append(R_row)
-		G_noise.append(G_row)
-		B_noise.append(B_row)
-	"""
+	b, g, r = cv2.split(I_noise)
+	
+	'''
 	fig, ax = plt.subplots(ncols = 3)
-	ax[0].imshow(R_noise)
-	ax[1].imshow(G_noise)
-	ax[2].imshow(B_noise)
+	ax[0].imshow(r)
+	ax[1].imshow(g)
+	ax[2].imshow(b)
 	plt.show()
-	"""
+	'''
+
 	#Single wavelet decomposition for each channel
-	RH, RV, RD = pywt.dwt2(R_noise, 'db8')[1]
-	GH, GV, GD = pywt.dwt2(G_noise, 'db8')[1]
-	BH, BV, BD = pywt.dwt2(B_noise, 'db8')[1]
+	RH, RV, RD = pywt.dwt2(r, 'db8')[1]
+	GH, GV, GD = pywt.dwt2(g, 'db8')[1]
+	BH, BV, BD = pywt.dwt2(b, 'db8')[1]
 	wv_components = [RH, RV, RD, GH, GV, GD, BH, BV, BD]
 	moments = []
 	
-	#print len(list(RH))
-	"""for component in wv_components:
-		for c in component:
-			print c
-			#for k in range(1, 10):
-			#	moments.append(round(moment(c, moment=k),4))
+	for component in wv_components:
+		moment = cv2.moments(component)
+		#for k in range(1,10):
+		#	moments.append(moment(component, moment=k))
+		moments.append(moment['mu20'])
+		moments.append(moment['mu11'])
+		moments.append(moment['mu02'])
+		moments.append(moment['mu30'])
+		moments.append(moment['mu21'])
+		moments.append(moment['mu12'])
+		moments.append(moment['mu03'])
 	#print len(moments)
-	"""	
+
 	return moments
 	
 def get_noise(img):

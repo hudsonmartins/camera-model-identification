@@ -1,30 +1,32 @@
-import random, os.path, plot_error
+import random, os.path
 import numpy as np
 
 class gradient_descent():
 
-	def __init__ (self, reg):
-		self.alpha = 1	 #Learning rate
+	def __init__ (self, reg, mean, std):
+		self.alpha = 0.5	 #Learning rate
 		self.lamb = 10		#Regularization param
 		self.regularization = reg  #True if there is regularization
+		self.mean = mean
+		self.std = std
 		
 	def fit(self, x_train, y_train):
 		print "Training..."
 
 		vec_error = []
-		bias = random.randint(-100, 100)	#Initialize the bias as a random value
+		bias = random.randint(-10, 10)	#Initialize the bias as a random value
 		theta = []
 
 
 		for i in range(len(x_train[0])):
-			theta.append(random.randint(-100, 100)) #Initialize theta as random values
+			theta.append(random.randint(-10, 10)) #Initialize theta as random values
 			
 		convergence = False
 		prev_cost = 0
 		convergence = 0
 		n_iterations = 0
 		
-		while(convergence < 50):	
+		while(convergence < 100):	
 			n_iterations += 1
 			h = []
 			m = len(x_train) #number of examples
@@ -32,14 +34,15 @@ class gradient_descent():
 				h.append(bias)
 				for j in range(len(theta)):
 					h[i] += theta[j]*x_train[i][j]
-				h[i] = sigmoid(h[i])
+				h[i] = self.sigmoid(h[i])
+
 			cost = self.cost(h, y_train) #Calculates the cost	
 			if n_iterations % 1 == 0:
 				print "Epoch: ", n_iterations ," Cost: ", cost
 				
 			vec_error.append(cost)
 						
-			if round(prev_cost, 1) == round(cost, 1):
+			if round(prev_cost, 3) == round(cost, 3):
 				convergence += 1
 			else:
 				convergence = 0				
@@ -58,12 +61,11 @@ class gradient_descent():
 			
 		print "Pesos ", bias, theta			
 		
-		file_name = raw_input("Insert the file name to save the linear regression data\n")
-
+		#file_name = raw_input("Insert the file name to save the logistic regression data\n")
+		file_name = "all_files_lr0.5"
 		theta = np.append([bias], theta, axis=0)
 		self.save_results(theta, vec_error, file_name, n_iterations)
-		plot_error.plot(vec_error)
-		
+				
 		return theta
 		
 	def cost(self, h, y):	
@@ -71,10 +73,17 @@ class gradient_descent():
 		m = len(h) #The number of examples
 		
 		for i in range(m):
-			j += y[i]*np.log(h[i]) + (1.0 - y[i])*np.log(1-h[i])
-			
-		j = -1.0*j/(m)
-		
+			if(y[i] == 1):
+				if(h[i] == 0):
+					j += -1.0*np.log(0.00000001)			
+				else:
+					j += -1.0*np.log(h[i])			
+			else:
+				if(h[i] == 1):
+					j += -1.0*np.log(0.00000001)			
+				else:
+					j += -1.0*np.log(1-h[i])					
+		j *= (1.0/m)
 		return j 	
 		
 	def gradient(self, h, x, y):
@@ -96,10 +105,8 @@ class gradient_descent():
 			
 		return gd
 
-	def sigmoid(z):
-		return 1.0/(1.0+np.exp(-1.0*z))
-	
-	
+	def sigmoid(self, z):
+		return 1.0/(1.0 + np.exp(-1.0*z))
 	
 	def save_results(self, weights, error, file_name, n_iterations):
 		if not os.path.isdir('results'):
@@ -108,7 +115,9 @@ class gradient_descent():
 		if os.path.isfile('results/'+file_name):
 			myfile = open('results/'+file_name, 'a+')
 			myfile.write('\n-----------------------------------------------\n')
-			myfile.write('Learning Rate: '+ str(self.alpha))
+			myfile.write('\nLearning Rate: '+ str(self.alpha))
+			myfile.write('\nMean: '+ str(self.mean))
+			myfile.write('\nStd: '+ str(self.std))
 			myfile.write('\nWeights: '+str(weights))
 			myfile.write('\nNumber of iterations: '+str(n_iterations))
 			myfile.write('\nError over time: '+str(error))
@@ -118,8 +127,9 @@ class gradient_descent():
 		else:
 			myfile = open('results/'+file_name, 'w+')
 			myfile.write('\n-----------------------------------------------\n')
-			myfile.write('Learning Rate: ')
-			myfile.write('Learning Rate: '+ str(self.alpha))
+			myfile.write('\nLearning Rate: '+ str(self.alpha))
+			myfile.write('\nMean: '+ str(self.mean))
+			myfile.write('\nStd: '+ str(self.std))
 			myfile.write('\nWeights: '+str(weights))
 			myfile.write('\nNumber of iterations: '+str(n_iterations))
 			myfile.write('\nError over time: '+str(error))
