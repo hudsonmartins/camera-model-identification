@@ -2,16 +2,57 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.restoration import denoise_wavelet
 from scipy.stats import moment
+from scipy.signal import correlate2d
 import pywt, cv2
 
 
 def increase_green_channel(I_noise):
-	for row in I_noise:
-		for pixel in row:
-			pixel[0] = pixel[0]*0.3
-			pixel[1] = pixel[1]*0.6
-			pixel[2] = pixel[2]*0.1
+	b,g,r = cv2.split(I_noise)
+	b = b*0.1
+	g = g*0.3
+	r = r*0.3
+	I_noise = cv2.merge((b,g,r))
+
 	return I_noise
+
+def mean(v):
+	return sum(v)/len(v)
+
+def covariance(X, Y):
+	return np.dot(X - mean(X), Y - mean(Y))
+
+def correlation(X, Y):
+	X = X.flatten()
+	Y = Y.flatten()
+	return covariance(X,Y)/(np.sqrt(covariance(X,X) * covariance(Y,Y))+(0.0000001))
+
+def get_correlation(pattern, Inoise):
+	b_pattern, g_pattern, r_pattern = cv2.split(pattern)
+	b_noise, g_noise, r_noise = cv2.split(Inoise)
+
+	r_pattern = r_pattern.flatten()
+	r_noise = r_noise.flatten()
+	
+	g_pattern = g_pattern.flatten()
+	g_noise = g_noise.flatten()
+	
+	b_pattern = b_pattern.flatten()
+	b_noise = b_noise.flatten()
+	
+	r = correlation(r_pattern, r_noise)
+	g = correlation(g_pattern, g_noise)
+	b = correlation(b_pattern, b_noise)
+	
+	return r, g, b
+
+def get_pattern(noises):
+	sum_noises = np.zeros((len(noises[0]), len(noises[0]), 3))
+	
+	for i in range(len(noises)):
+		sum_noises = np.add(sum_noises, noises[i])
+	
+	return sum_noises/len(noises)
+
 
 def get_fingerprint(noises, images):
 
@@ -64,9 +105,9 @@ def extract_features_moments(I_noise):
 	moments = []
 	
 	for component in wv_components:
-		moment = cv2.moments(component)
 		#for k in range(1,10):
-		#	moments.append(moment(component, moment=k))
+		#	moments.append(moment(component.ravel(), moment=k))
+		moment = cv2.moments(component)
 		moments.append(moment['mu20'])
 		moments.append(moment['mu11'])
 		moments.append(moment['mu02'])
@@ -74,11 +115,12 @@ def extract_features_moments(I_noise):
 		moments.append(moment['mu21'])
 		moments.append(moment['mu12'])
 		moments.append(moment['mu03'])
+		
 	#print len(moments)
 
 	return moments
 	
 def get_noise(img):
 	wv_denoise = denoise_wavelet(img, wavelet='db8', multichannel=True, wavelet_levels = 4)
-	noise = img - wv_denoise
-	return noise, wv_denoise
+	noise = img - wv_denoise*255.0
+	return noise

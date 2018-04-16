@@ -3,23 +3,23 @@ import numpy as np
 
 class gradient_descent():
 
-	def __init__ (self, reg, mean, std):
-		self.alpha = 0.5	 #Learning rate
-		self.lamb = 10		#Regularization param
+	def __init__ (self, reg):
+		self.alpha = 1	 #Learning rate
+		self.lamb = 1		#Regularization param
 		self.regularization = reg  #True if there is regularization
-		self.mean = mean
-		self.std = std
+		#self.mean = mean
+		#self.std = std
 		
 	def fit(self, x_train, y_train):
 		print "Training..."
 
 		vec_error = []
-		bias = random.randint(-10, 10)	#Initialize the bias as a random value
+		bias = random.randint(-1, 1)	#Initialize the bias as a random value
 		theta = []
 
 
 		for i in range(len(x_train[0])):
-			theta.append(random.randint(-10, 10)) #Initialize theta as random values
+			theta.append(random.randint(-1, 1)) #Initialize theta as random values
 			
 		convergence = False
 		prev_cost = 0
@@ -42,7 +42,7 @@ class gradient_descent():
 				
 			vec_error.append(cost)
 						
-			if round(prev_cost, 3) == round(cost, 3):
+			if round(prev_cost, 4) == round(cost, 4):
 				convergence += 1
 			else:
 				convergence = 0				
@@ -62,7 +62,8 @@ class gradient_descent():
 		print "Pesos ", bias, theta			
 		
 		#file_name = raw_input("Insert the file name to save the logistic regression data\n")
-		file_name = "all_files_lr0.5"
+		
+		file_name = "10classes_correlation"
 		theta = np.append([bias], theta, axis=0)
 		self.save_results(theta, vec_error, file_name, n_iterations)
 				
@@ -71,7 +72,8 @@ class gradient_descent():
 	def cost(self, h, y):	
 		j = 0 #The cost J
 		m = len(h) #The number of examples
-		
+
+		#print h
 		for i in range(m):
 			if(y[i] == 1):
 				if(h[i] == 0):
@@ -106,6 +108,8 @@ class gradient_descent():
 		return gd
 
 	def sigmoid(self, z):
+		#Prevent overflow
+		z = np.clip(z, -500, 500 )
 		return 1.0/(1.0 + np.exp(-1.0*z))
 	
 	def save_results(self, weights, error, file_name, n_iterations):
@@ -116,11 +120,11 @@ class gradient_descent():
 			myfile = open('results/'+file_name, 'a+')
 			myfile.write('\n-----------------------------------------------\n')
 			myfile.write('\nLearning Rate: '+ str(self.alpha))
-			myfile.write('\nMean: '+ str(self.mean))
-			myfile.write('\nStd: '+ str(self.std))
+			#myfile.write('\nMean: '+ str(self.mean))
+			#myfile.write('\nStd: '+ str(self.std))
 			myfile.write('\nWeights: '+str(weights))
 			myfile.write('\nNumber of iterations: '+str(n_iterations))
-			myfile.write('\nError over time: '+str(error))
+			myfile.write('\nFinal cost: '+str(error[len(error)-1]))
 			
 
 			myfile.close()
@@ -128,10 +132,10 @@ class gradient_descent():
 			myfile = open('results/'+file_name, 'w+')
 			myfile.write('\n-----------------------------------------------\n')
 			myfile.write('\nLearning Rate: '+ str(self.alpha))
-			myfile.write('\nMean: '+ str(self.mean))
-			myfile.write('\nStd: '+ str(self.std))
+			#myfile.write('\nMean: '+ str(self.mean))
+			#myfile.write('\nStd: '+ str(self.std))
 			myfile.write('\nWeights: '+str(weights))
 			myfile.write('\nNumber of iterations: '+str(n_iterations))
-			myfile.write('\nError over time: '+str(error))
+			myfile.write('\nFinal cost: '+str(error[len(error)-1]))
 			myfile.close()
 			
