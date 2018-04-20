@@ -1,0 +1,145 @@
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction import image as sklimage
+import feature_extraction
+import glob, pywt, csv, os.path, os, cv2
+
+
+def get_train_features(fingerprint, classes):
+	print "Finding features..."
+	feat_dict = dict()
+	for i in range(len(classes)): 
+		count_img = 0
+		print "Getting images and calculating noise for "+classes[i]
+		extensions = ('/*.jpg', '/*.JPG')
+		for ex in extensions:
+			for image in glob.glob('dataset/train/'+classes[i]+ex): 
+				count_img += 1
+				#if count_img > 10:
+				#	break
+	
+				print "image: ", count_img
+				img = Image.open(image)
+
+				if img.size[0] > img.size[1]:
+					img = img.rotate(90)
+			
+				center = [img.size[0]/2, img.size[1]/2]
+			
+				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))
+				img = np.asarray(img)
+					
+				#patches = sklimage.extract_patches_2d(img, (256, 256), max_patches=8)
+				#print "Patches, ", patches.shape
+				#for patch in patches:
+				I_noise = feature_extraction.get_noise(img)
+				I_noise = feature_extraction.increase_green_channel(I_noise)
+				
+				feat = calculate_features(I_noise)
+
+				if(classes[i] in feat_dict):
+					feat_dict[classes[i]].append(feat)
+				else:
+					feat_dict[classes[i]] = [feat]
+					
+	return feat_dict
+
+
+def get_fingerprint(classes):
+	pattern_list = []
+
+	for i in range(len(classes)):
+		noise_list = []
+		count_img = 0   
+		print "Getting fingerprint for "+classes[i]
+		extensions = ('/*.jpg', '/*.JPG')
+		for ex in extensions:
+			for image in glob.glob('dataset/train/'+classes[i]+ex): 
+				count_img += 1
+				if count_img > 50:
+					break
+		
+				#print "image: ", count_img
+				img = Image.open(image)
+
+				if img.size[0] > img.size[1]:
+					img = img.rotate(90)
+				
+				center = [img.size[0]/2, img.size[1]/2]
+				
+				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))
+				img = np.asarray(img)
+						
+				#patches = sklimage.extract_patches_2d(img, (256, 256), max_patches=8)
+				#print "Patches, ", patches.shape
+				#for patch in patches:
+				I_noise = feature_extraction.get_noise(img)
+				I_noise = feature_extraction.increase_green_channel(I_noise)
+				noise_list.append(I_noise)	
+					
+		pattern_list.append(feature_extraction.get_pattern(noise_list))
+
+	return pattern_list
+	
+def calculate_features(I_noise):	
+	feat = []
+	
+	for pattern in fingerprint:
+		#Get the correlations R-R, G-G, B-B 
+		corr_r, corr_g, corr_b = feature_extraction.get_correlation(pattern, I_noise)
+		feat.append(corr_r)
+		feat.append(corr_g)
+		feat.append(corr_b)
+		#Get the cross-correlations R-G, R-B, G-B, G-R, B-G, B-R,  	
+		cross_corr = feature_extraction.get_cross_correlation(pattern, I_noise)
+		for corr in cross_corr:
+			feat.append(corr)
+	"""
+	statistical = feature_extraction.get_statistical_features(I_noise)
+	
+	for stat in statistical:
+		feat.append(stat)
+	"""
+	return feat
+	
+def save_features(feat):
+	count = 1
+	created = False
+	while (not created):
+		fn = 'features'+str(count)+'.csv'
+		if os.path.isfile(fn): 
+			count += 1
+		else:
+			created = True
+			
+	print "Writing on csv file"
+	with open(fn, 'a') as csvfile:
+		for i in range(len(feat)):
+			train_feat = []
+			train_targ = []
+		
+			for camera in feat:
+				for image in feat[camera]:
+					train_feat.append(image)
+					train_targ.append(i)
+
+			writer = csv.writer(csvfile, delimiter = ',', quoting=csv.QUOTE_NONE)
+			writer.writerow([train_feat, train_targ])
+
+classes = ['HTC-1-M7',
+	   'iPhone-4s',
+   	   'iPhone-6',
+   	   'LG-Nexus-5x',
+   	   'Motorola-Droid-Maxx',
+   	   'Motorola-Nexus-6',
+   	   'Motorola-X',
+   	   'Samsung-Galaxy-Note3',
+   	   'Samsung-Galaxy-S4',
+   	   'Sony-NEX-7']
+
+fingerprint = get_fingerprint(classes)
+feat = get_train_features(fingerprint, classes)
+save_features(feat)
+
+

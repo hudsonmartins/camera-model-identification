@@ -44,7 +44,49 @@ def get_correlation(pattern, Inoise):
 	b = correlation(b_pattern, b_noise)
 	
 	return r, g, b
+	
+def get_cross_correlation(pattern, Inoise):
+	b_pattern, g_pattern, r_pattern = cv2.split(pattern)
+	b_noise, g_noise, r_noise = cv2.split(Inoise)
 
+	r_pattern = r_pattern.flatten()
+	r_noise = r_noise.flatten()
+	
+	g_pattern = g_pattern.flatten()
+	g_noise = g_noise.flatten()
+	
+	b_pattern = b_pattern.flatten()
+	b_noise = b_noise.flatten()
+	
+	r1 = correlation(r_pattern, g_noise)
+	r2 = correlation(r_pattern, b_noise)
+	
+	g1 = correlation(g_pattern, b_noise)
+	g2 = correlation(g_pattern, r_noise)
+	
+	b1 = correlation(b_pattern, r_noise)
+	b2 = correlation(b_pattern, g_noise)
+	
+	return [r1, r2, g1, g2, b1, b2]
+
+def get_statistical_features(I_noise):
+	b, g, r = cv2.split(I_noise)
+	
+	r_mean = np.mean(r.flatten())
+	g_mean = np.mean(g.flatten())
+	b_mean = np.mean(b.flatten())
+	
+	r_var = np.var(r.flatten())
+	g_var = np.var(g.flatten())
+	b_var = np.var(b.flatten())
+	
+	r_std =	np.std(r.flatten())
+	g_std = np.std(g.flatten())
+	b_std = np.std(b.flatten())
+	
+	return [r_mean, g_mean, b_mean, r_var, g_var, b_var, r_std, g_std, b_std]
+	
+	
 def get_pattern(noises):
 	sum_noises = np.zeros((len(noises[0]), len(noises[0]), 3))
 	
@@ -70,15 +112,15 @@ def get_fingerprint(noises, images):
 def extract_features(fingerprint):
 	print statistical_moments(fingerprint)
 
-def statistical_moments(fingerprint):
+def statistical_moments(Inoise):
 	#first 3 central normalized moments nu20, nu11, nu02
-	b, g, r = cv2.split(fingerprint)
+	b, g, r = cv2.split(Inoise)
 	
 	r_moments = cv2.moments(r)
 	g_moments = cv2.moments(g)
 	b_moments = cv2.moments(b)
 	
-	features = [[r_moments['nu20'], r_moments['nu11'], r_moments['nu02']], [g_moments['nu20'], g_moments['nu11'], g_moments['nu02']], [b_moments['nu20'], b_moments['nu11'], b_moments['nu02']]]
+	features = [r_moments['nu20'], r_moments['nu11'], r_moments['nu02'], g_moments['nu20'], g_moments['nu11'], g_moments['nu02'], b_moments['nu20'], b_moments['nu11'], b_moments['nu02']]
 	
 	return features
 	
@@ -123,4 +165,5 @@ def extract_features_moments(I_noise):
 def get_noise(img):
 	wv_denoise = denoise_wavelet(img, wavelet='db8', multichannel=True, wavelet_levels = 4)
 	noise = img - wv_denoise*255.0
+	
 	return noise
