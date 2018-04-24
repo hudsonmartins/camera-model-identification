@@ -37,7 +37,7 @@ class gradient_descent():
 				h[i] = self.sigmoid(h[i])
 
 			cost = self.cost(h, y_train) #Calculates the cost	
-			if n_iterations % 10 == 0:
+			if n_iterations % 1 == 0:
 				print "Epoch: ", n_iterations ," Cost: ", cost
 				
 			vec_error.append(cost)
@@ -63,7 +63,7 @@ class gradient_descent():
 		
 		#file_name = raw_input("Insert the file name to save the logistic regression data\n")
 		
-		file_name = "99feat-all_classes"
+		file_name = "augmented_test"
 		theta = np.append([bias], theta, axis=0)
 		self.save_results(theta, vec_error, file_name, n_iterations)
 				

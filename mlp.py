@@ -3,15 +3,15 @@ from keras.layers.core import Dense, Activation, Dropout
 from keras.utils import to_categorical
 class mlp():
 	def __init__ (self):
-		self.size_hidden_layer = 200
+		self.size_hidden_layer = 500
 				
 	def createModel(self, input_dim, n_classes):
 		model = Sequential()
 		model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
 		model.add(Activation('relu'))
-		model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
-		model.add(Activation('relu'))
-		#model.add(Dropout(0.15))
+		#model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
+		#model.add(Activation('relu'))
+		model.add(Dropout(0.15))
 		model.add(Dense(n_classes))
 		model.add(Activation('softmax'))
 	
@@ -19,19 +19,18 @@ class mlp():
 
 
 	def train(self, X_train, y_train, classes):
-		
 		input_dim = len(X_train[0])
 		n_classes = len(classes)
 		
 		#convert to cathegorical
 		y_train = to_categorical(y_train) #Convert to categorical variables
-		
+		print X_train.shape		
 		self.model = self.createModel(input_dim, n_classes)
 		self.model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
 		print("Training...")
-		self.model.fit(X_train, y_train, epochs=600, batch_size=32, verbose=2)
-		self.model.save('results/network1')
+		self.model.fit(X_train, y_train, epochs=1000, batch_size=32, verbose=2)
+		self.model.save('results/network2')
 		
 	def predict(self, X_test, y_test):
 		y_test = to_categorical(y_test)

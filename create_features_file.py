@@ -2,21 +2,24 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction import image as sklimage
-import feature_extraction
+import feature_extraction, data_augmentation
 import glob, pywt, csv, os.path, os, cv2
 
 
 def get_train_features(fingerprint, classes):
 	print "Finding features..."
 	feat_dict = dict()
+
+		
 	for i in range(len(classes)): 
+		features = []
 		count_img = 0
 		print "Getting images and calculating noise for "+classes[i]
 		extensions = ('/*.jpg', '/*.JPG')
+		images = os.listdir('dataset/train/'+classes[i])
 		for ex in extensions:
 			for image in glob.glob('dataset/train/'+classes[i]+ex): 
-				count_img += 1
-				#if count_img > 10:
+				#if count_img > 1:
 				#	break
 	
 				print "image: ", count_img
@@ -28,22 +31,40 @@ def get_train_features(fingerprint, classes):
 				center = [img.size[0]/2, img.size[1]/2]
 			
 				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))
+				data_augmentation.augment(img, images[count_img], classes[i])
+				
 				img = np.asarray(img)
 					
-				#patches = sklimage.extract_patches_2d(img, (256, 256), max_patches=8)
-				#print "Patches, ", patches.shape
-				#for patch in patches:
 				I_noise = feature_extraction.get_noise(img)
 				I_noise = feature_extraction.increase_green_channel(I_noise)
 				
 				feat = calculate_features(I_noise)
 
-				if(classes[i] in feat_dict):
-					feat_dict[classes[i]].append(feat)
-				else:
-					feat_dict[classes[i]] = [feat]
+				features.append(feat)
 					
-	return feat_dict
+				count_img += 1
+				
+			for image in glob.glob('dataset/train/'+classes[i]+'/augmented/'+ex): 
+				print "image: ", count_img
+				
+				img = Image.open(image)
+				if img.size[0] > img.size[1]:
+					img = img.rotate(90)	
+				center = [img.size[0]/2, img.size[1]/2]
+				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))		
+				img = np.asarray(img)
+			
+				I_noise = feature_extraction.get_noise(img)
+				I_noise = feature_extraction.increase_green_channel(I_noise)
+				
+				feat = calculate_features(I_noise)
+
+				features.append(feat)
+					
+				count_img += 1
+		save_features(features, i)
+					
+	#return feat_dict
 
 
 def get_fingerprint(classes):
@@ -57,9 +78,7 @@ def get_fingerprint(classes):
 		for ex in extensions:
 			for image in glob.glob('dataset/train/'+classes[i]+ex): 
 				count_img += 1
-				if count_img > 50:
-					break
-		
+						
 				#print "image: ", count_img
 				img = Image.open(image)
 
@@ -103,7 +122,7 @@ def calculate_features(I_noise):
 	"""
 	return feat
 	
-def save_features(feat):
+def save_features(feat, label):
 	count = 1
 	created = False
 	while (not created):
@@ -113,19 +132,14 @@ def save_features(feat):
 		else:
 			created = True
 			
-	print "Writing on csv file"
 	with open(fn, 'a') as csvfile:
-		for i in range(len(feat)):
-			train_feat = []
-			train_targ = []
-		
-			for camera in feat:
-				for image in feat[camera]:
-					train_feat.append(image)
-					train_targ.append(i)
-
+	
+		for f in feat:
+			f.append(label)
+	
+		for row in feat:
 			writer = csv.writer(csvfile, delimiter = ',', quoting=csv.QUOTE_NONE)
-			writer.writerow([train_feat, train_targ])
+			writer.writerow(row)
 
 classes = ['HTC-1-M7',
 	   'iPhone-4s',
@@ -139,7 +153,7 @@ classes = ['HTC-1-M7',
    	   'Sony-NEX-7']
 
 fingerprint = get_fingerprint(classes)
-feat = get_train_features(fingerprint, classes)
-save_features(feat)
+get_train_features(fingerprint, classes)
+#save_features(feat)
 
 
