@@ -147,8 +147,9 @@ def extract_features_moments(I_noise):
 	moments = []
 	
 	for component in wv_components:
-		#for k in range(1,10):
-		#	moments.append(moment(component.ravel(), moment=k))
+		for k in range(1,10):
+			moments.append(moment(component.flatten(), moment=k))
+		"""
 		moment = cv2.moments(component)
 		moments.append(moment['mu20'])
 		moments.append(moment['mu11'])
@@ -157,7 +158,7 @@ def extract_features_moments(I_noise):
 		moments.append(moment['mu21'])
 		moments.append(moment['mu12'])
 		moments.append(moment['mu03'])
-		
+		"""
 	#print len(moments)
 
 	return moments

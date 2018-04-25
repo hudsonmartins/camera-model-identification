@@ -10,7 +10,6 @@ def get_train_features(fingerprint, classes):
 	print "Finding features..."
 	feat_dict = dict()
 
-		
 	for i in range(len(classes)): 
 		features = []
 		count_img = 0
@@ -31,7 +30,7 @@ def get_train_features(fingerprint, classes):
 				center = [img.size[0]/2, img.size[1]/2]
 			
 				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))
-				data_augmentation.augment(img, images[count_img], classes[i])
+				#data_augmentation.augment(img, images[count_img], classes[i])
 				
 				img = np.asarray(img)
 					
@@ -69,41 +68,15 @@ def get_train_features(fingerprint, classes):
 
 def get_fingerprint(classes):
 	pattern_list = []
-
 	for i in range(len(classes)):
-		noise_list = []
-		count_img = 0   
 		print "Getting fingerprint for "+classes[i]
-		extensions = ('/*.jpg', '/*.JPG')
-		for ex in extensions:
-			for image in glob.glob('dataset/train/'+classes[i]+ex): 
-				count_img += 1
-						
-				#print "image: ", count_img
-				img = Image.open(image)
-
-				if img.size[0] > img.size[1]:
-					img = img.rotate(90)
-				
-				center = [img.size[0]/2, img.size[1]/2]
-				
-				img = img.crop((center[0]-256, center[1]-256, center[0]+256, center[1]+256))
-				img = np.asarray(img)
-						
-				#patches = sklimage.extract_patches_2d(img, (256, 256), max_patches=8)
-				#print "Patches, ", patches.shape
-				#for patch in patches:
-				I_noise = feature_extraction.get_noise(img)
-				I_noise = feature_extraction.increase_green_channel(I_noise)
-				noise_list.append(I_noise)	
-					
-		pattern_list.append(feature_extraction.get_pattern(noise_list))
+		pattern_list.append(np.load('fingerprints/fingerprint_'+classes[i]+'.npy'))
 
 	return pattern_list
 	
 def calculate_features(I_noise):	
 	feat = []
-	
+	"""
 	for pattern in fingerprint:
 		#Get the correlations R-R, G-G, B-B 
 		corr_r, corr_g, corr_b = feature_extraction.get_correlation(pattern, I_noise)
@@ -115,18 +88,20 @@ def calculate_features(I_noise):
 		for corr in cross_corr:
 			feat.append(corr)
 	"""
-	statistical = feature_extraction.get_statistical_features(I_noise)
+	#statistical = feature_extraction.get_statistical_features(I_noise)
 	
-	for stat in statistical:
-		feat.append(stat)
-	"""
+	#for stat in statistical:
+	#	feat.append(stat)
+	moments = feature_extraction.extract_features_moments(I_noise)
+	for moment in moments:
+		feat.append(moment)
 	return feat
 	
 def save_features(feat, label):
 	count = 1
 	created = False
 	while (not created):
-		fn = 'features'+str(count)+'.csv'
+		fn = 'moments_features'+str(count)+'.csv'
 		if os.path.isfile(fn): 
 			count += 1
 		else:
@@ -152,8 +127,9 @@ classes = ['HTC-1-M7',
    	   'Samsung-Galaxy-S4',
    	   'Sony-NEX-7']
 
+
 fingerprint = get_fingerprint(classes)
 get_train_features(fingerprint, classes)
-#save_features(feat)
+
 
 

@@ -13,7 +13,7 @@ def get_fingerprint(classes):
 	pattern_list = []
 	for i in range(len(classes)):
 		print "Getting fingerprint for "+classes[i]
-		pattern_list.append(np.load('fingerprint_'+classes[i]+'.npy'))
+		pattern_list.append(np.load('fingerprints/fingerprint_'+classes[i]+'.npy'))
 
 	return pattern_list
 	
@@ -27,14 +27,17 @@ def calculate_features(I_noise):
 		feat.append(corr_g)
 		feat.append(corr_b)
 		#Get the cross-correlations R-G, R-B, G-B, G-R, B-G, B-R,  	
-	#	cross_corr = feature_extraction.get_cross_correlation(pattern, I_noise)
-	#	for corr in cross_corr:
-	#		feat.append(corr)
-	"""
-	statistical = feature_extraction.get_statistical_features(I_noise)
+		cross_corr = feature_extraction.get_cross_correlation(pattern, I_noise)
+		for corr in cross_corr:
+			feat.append(corr)
 	
+	statistical = feature_extraction.get_statistical_features(I_noise)
 	for stat in statistical:
 		feat.append(stat)
+	"""	
+	moments = feature_extraction.extract_features_moments(I_noise)
+	for moment in moments:
+		feat.append(moment)
 	"""
 	return feat
 
@@ -50,7 +53,7 @@ def get_train_features(fingerprint, classes):
 		for i in range(len(row)-1):
 			if (i < 3 or (i > 8 and i < 12) or (i > 17 and i < 21)	or (i > 26 and i < 30)	or (i > 35 and i < 39)	or (i > 44 and i < 48) or (i > 53 and i < 57) or (i > 62 and i < 66) or (i > 71 and i < 75) or (i > 80 and i < 84)):	
 				feat.append(row[i])
-				
+		
 		train_feat.append(feat)	
 		targ.append(int(row[len(row)-1]))
 		
@@ -58,7 +61,6 @@ def get_train_features(fingerprint, classes):
 
 
 def logistic(train_feat, train_targ):
-
 	print "Training..."		
 	logisticRegr = LogisticRegression()
 	h = logisticRegr.fit(train_feat, train_targ)
@@ -195,7 +197,8 @@ def validate_nn(model):
 			feat = []
 			targ.append(int(row[(len(row)-1)]))
 			for i in range(len(row)-1):
-				feat.append(row[i])
+				if (i < 3 or (i > 8 and i < 12) or (i > 17 and i < 21)	or (i > 26 and i < 30)	or (i > 35 and i < 39)	or (i > 44 and i < 48) or (i > 53 and i < 57) or (i > 62 and i < 66) or (i > 71 and i < 75) or (i > 80 and i < 84)):
+					feat.append(row[i])
 			
 			valid_feat.append(feat)
 			valid_targ.append(targ)
@@ -218,9 +221,9 @@ def validate_logistic(model):
 			feat = []
 			targ.append(int(row[(len(row)-1)]))
 			for i in range(len(row)-1):
-				if (i < 3 or (i > 8 and i < 12) or (i > 17 and i < 21)	or (i > 26 and i < 30)	or (i > 35 and i < 39)	or (i > 44 and i < 48) or (i > 53 and i < 57) or (i > 62 and i < 66) or (i > 71 and i < 75) or (i > 80 and i < 84)):
-					feat.append(row[i])
-			
+				#if (i < 3 or (i > 8 and i < 12) or (i > 17 and i < 21)	or (i > 26 and i < 30)	or (i > 35 and i < 39)	or (i > 44 and i < 48) or (i > 53 and i < 57) or (i > 62 and i < 66) or (i > 71 and i < 75) or (i > 80 and i < 84)):
+				feat.append(row[i])
+				
 			valid_feat.append(feat)
 			valid_targ.append(targ)
 	
@@ -246,8 +249,8 @@ def predict_logistic(model, classes):
 			label.append(row[0])
 
 			for i in range(1, len(row)):
-				if (i < 4 or (i > 9 and i < 13) or (i > 18 and i < 22)	or (i > 27 and i < 31)	or (i > 36 and i < 40)	or (i > 45 and i < 49) or (i > 54 and i < 58) or (i > 63 and i < 67) or (i > 72 and i < 76) or (i > 81 and i < 85)):	
-					feat.append(row[i])
+				#if (i < 4 or (i > 9 and i < 13) or (i > 18 and i < 22)	or (i > 27 and i < 31)	or (i > 36 and i < 40)	or (i > 45 and i < 49) or (i > 54 and i < 58) or (i > 63 and i < 67) or (i > 72 and i < 76) or (i > 81 and i < 85)):	
+				feat.append(row[i])
 			
 			test_feat.append(feat)
 	
@@ -281,7 +284,8 @@ def predict_nn(model, classes):
 			label.append(row[0])
 
 			for i in range(1, len(row)):
-				feat.append(row[i])
+				if (i < 4 or (i > 9 and i < 13) or (i > 18 and i < 22)	or (i > 27 and i < 31)	or (i > 36 and i < 40)	or (i > 45 and i < 49) or (i > 54 and i < 58) or (i > 63 and i < 67) or (i > 72 and i < 76) or (i > 81 and i < 85)):
+					feat.append(row[i])
 			
 			test_feat.append(feat)
 	test_feat = np.array(test_feat)

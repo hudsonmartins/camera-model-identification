@@ -3,15 +3,16 @@ from keras.layers.core import Dense, Activation, Dropout
 from keras.utils import to_categorical
 class mlp():
 	def __init__ (self):
-		self.size_hidden_layer = 500
+		self.size_hidden_layer = 100
 				
 	def createModel(self, input_dim, n_classes):
 		model = Sequential()
 		model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
 		model.add(Activation('relu'))
-		#model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
-		#model.add(Activation('relu'))
-		model.add(Dropout(0.15))
+		model.add(Dropout(0.5))
+		model.add(Dense(self.size_hidden_layer, input_dim=input_dim))
+		model.add(Activation('relu'))
+		model.add(Dropout(0.5))
 		model.add(Dense(n_classes))
 		model.add(Activation('softmax'))
 	
@@ -29,7 +30,7 @@ class mlp():
 		self.model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
 
 		print("Training...")
-		self.model.fit(X_train, y_train, epochs=1000, batch_size=32, verbose=2)
+		self.model.fit(X_train, y_train, epochs=800, batch_size=32, verbose=2)
 		self.model.save('results/network2')
 		
 	def predict(self, X_test, y_test):

@@ -7,13 +7,13 @@ def get_fingerprint(classes):
 	pattern_list = []
 	for i in range(len(classes)):
 		print "Getting fingerprint for "+classes[i]
-		pattern_list.append(np.load('fingerprint_'+classes[i]+'.npy'))
+		pattern_list.append(np.load('fingerprints/fingerprint_'+classes[i]+'.npy'))
 
 	return pattern_list
 	
 def calculate_features(I_noise):	
 	feat = []
-	
+	"""
 	for pattern in fingerprint:
 		#Get the correlations R-R, G-G, B-B 
 		corr_r, corr_g, corr_b = feature_extraction.get_correlation(pattern, I_noise)
@@ -25,11 +25,10 @@ def calculate_features(I_noise):
 		for corr in cross_corr:
 			feat.append(corr)
 	"""
-	statistical = feature_extraction.get_statistical_features(I_noise)
+	statistical = feature_extraction.extract_features_moments(I_noise)
 	
 	for stat in statistical:
 		feat.append(stat)
-	"""
 	return feat
 	
 def save_test_features(classes, fingerprint):
@@ -52,7 +51,7 @@ def save_test_features(classes, fingerprint):
 			row.append(f)
 		count = 1
 		while (not created):
-			fn = 'test_features'+str(count)+'.csv'
+			fn = 'stat_test_features'+str(count)+'.csv'
 			if os.path.isfile(fn): 
 				count += 1
 			else:
